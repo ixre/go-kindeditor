@@ -262,11 +262,12 @@ func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string,err 
 		os.ModePerm)
 
 	if err == nil {
+		defer fi.Close()
 		buf := bufio.NewWriter(fi)
 		bufSize := 100
 		buffer := make([]byte, bufSize)
 		var n int
-		var leng int
+		var totalLen int
 		for {
 			if n, err = f.Read(buffer); err == io.EOF {
 				break
@@ -278,8 +279,9 @@ func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string,err 
 				buf.Write(buffer)
 			}
 
-			leng += n
+			totalLen += n
 		}
+		buf.Flush()
 	}
 
 	return dirPath + newFileName, nil
