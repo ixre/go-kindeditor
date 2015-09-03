@@ -9,10 +9,10 @@
 package go_kindeditor
 
 import (
-	"github.com/jrsix/gof/web"
+	"github.com/jsix/gof/web"
 	"strings"
 	"encoding/json"
-	"github.com/jrsix/gof/web/mvc"
+	"github.com/jsix/gof/web/mvc"
 )
 
 
