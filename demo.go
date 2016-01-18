@@ -9,28 +9,28 @@
 package go_kindeditor
 
 import (
-	"github.com/jsix/gof/web"
-	"strings"
 	"encoding/json"
+	"errors"
+	"github.com/jsix/gof/web"
 	"github.com/jsix/gof/web/mvc"
+	"strings"
 )
-
 
 var _ mvc.Filter = new(editorController)
 
 type editorController struct {
 }
 
-func (this *editorController) Requesting(*web.Context) bool{
+func (this *editorController) Requesting(*web.Context) bool {
 	//todo: check permission
 	return true
 }
 
-func (this *editorController) RequestEnd(*web.Context){
+func (this *editorController) RequestEnd(*web.Context) {
 }
 
 func (this *editorController) File_manager(ctx *web.Context) {
-	d, err := fileManager(ctx.Request,"./uploads/","http://img.abc.com/uploads/")
+	d, err := fileManager(ctx.Request, "./uploads/", "http://img.abc.com/uploads/")
 	ctx.Response.Header().Add("Content-Type", "application/json")
 	if err != nil {
 		ctx.Response.Write([]byte("{error:'" + strings.Replace(err.Error(), "'", "\\'", -1) + "'}"))
@@ -39,13 +39,16 @@ func (this *editorController) File_manager(ctx *web.Context) {
 	}
 }
 
-func (this *editorController) File_upload_post(ctx *web.Context) {
-	fileUrl, err := fileUpload(ctx.Request,"./uploads/","http://img.abc.com/uploads/")
+func (this *editorController) File_upload(ctx *web.Context) {
+	if ctx.Request().Method != "POST" {
+		return errors.New("error request method")
+	}
+	fileUrl, err := fileUpload(ctx.Request, "./uploads/", "http://img.abc.com/uploads/")
 	var hash map[string]interface{} = make(map[string]interface{})
 	if err == nil {
-		hash["error"] = 0;
-		hash["url"] = fileUrl;
-	}else {
+		hash["error"] = 0
+		hash["url"] = fileUrl
+	} else {
 		hash["error"] = 1
 		hash["message"] = err.Error()
 	}

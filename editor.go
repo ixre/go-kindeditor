@@ -8,26 +8,24 @@
  */
 package go_kindeditor
 
-
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"bufio"
-	"io"
-	"math/rand"
-	"regexp"
 )
 
 var _ sort.Interface = new(SorterFiles)
-
 
 type SorterFiles struct {
 	files  []os.FileInfo
@@ -81,7 +79,7 @@ func fileManager(r *http.Request, rootDir, rootUrl string) ([]byte, error) {
 
 	if len(dirName) != 0 {
 		if dirName == "image" || dirName == "flash" ||
-		dirName == "media" || dirName == "file" {
+			dirName == "media" || dirName == "file" {
 			dirPath += dirName + "/"
 			rootUrl += dirName + "/"
 			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
@@ -103,7 +101,7 @@ func fileManager(r *http.Request, rootDir, rootUrl string) ([]byte, error) {
 		currentPath = dirPath + path
 		currentUrl = rootUrl + path
 		currentDirPath = path
-		moveUpDirPath = moveUpRegexp.ReplaceAllString(currentDirPath,"$1")
+		moveUpDirPath = moveUpRegexp.ReplaceAllString(currentDirPath, "$1")
 	}
 
 	//不允许使用..移动到上一级目录
@@ -160,7 +158,7 @@ func fileManager(r *http.Request, rootDir, rootUrl string) ([]byte, error) {
 	for i := 0; i < dirList.Len(); i++ {
 		hash := make(map[string]interface{})
 		fs, _ := ioutil.ReadDir(currentPath + "/" + dirList.files[i].Name())
-		fmt.Println("----",currentPath + "/" + dirList.files[i].Name())
+		fmt.Println("----", currentPath+"/"+dirList.files[i].Name())
 		hash["is_dir"] = true
 		hash["has_file"] = len(fs) > 0
 		hash["is_photo"] = false
@@ -190,7 +188,7 @@ func fileManager(r *http.Request, rootDir, rootUrl string) ([]byte, error) {
 }
 
 // 文件上传
-func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string,err error) {
+func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string, err error) {
 
 	//定义允许上传的文件扩展名
 	var extTable map[string]string = map[string]string{
@@ -228,7 +226,7 @@ func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string,err 
 
 	// 检查扩展名
 	if strings.Index(extTable[dirName], fileExt) == -1 &&
-	!strings.HasSuffix(extTable[dirName], fileExt) {
+		!strings.HasSuffix(extTable[dirName], fileExt) {
 		return "", errors.New("上传文件扩展名是不允许的扩展名。\n只允许" + extTable[dirName] + "格式。")
 	}
 
@@ -237,25 +235,22 @@ func fileUpload(r *http.Request, savePath, rootPath string) (fileUrl string,err 
 		return "", errors.New("上传文件大小超过限制。")
 	}
 
-
 	//创建文件夹
-	dirPath += dirName + "/";
-	savePath += dirName + "/";
+	dirPath += dirName + "/"
+	savePath += dirName + "/"
 
 	var now = time.Now()
 	var ymd string = now.Format("200601")
-	dirPath += ymd + "/";
-	savePath += ymd + "/";
+	dirPath += ymd + "/"
+	savePath += ymd + "/"
 
-	if _,err := os.Stat(savePath);os.IsNotExist(err){
-		os.MkdirAll(savePath,os.ModePerm)
+	if _, err := os.Stat(savePath); os.IsNotExist(err) {
+		os.MkdirAll(savePath, os.ModePerm)
 	}
 
 	var newFileName string = fmt.Sprintf("%d_%d.%s", now.Unix(),
 		100+rand.Intn(899), fileExt)
-	var filePath string = savePath + newFileName;
-
-
+	var filePath string = savePath + newFileName
 
 	fi, err := os.OpenFile(filePath,
 		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
